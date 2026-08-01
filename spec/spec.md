@@ -1,5 +1,44 @@
 # Especificación de Funcionalidad: PetPocket — MVP
 
+**Rama:** 001-mvp
+**Estado:** Aprobado por el equipo (sin revisión de mentor) — listo para `/speckit-plan`
+
+> ✅ **Nota de resolución de clarificaciones (equipo, sin mentor disponible):**
+> Ante la falta de revisión del mentor de investigación, el equipo tomó las
+> siguientes decisiones para poder avanzar, documentadas aquí para
+> trazabilidad:
+> 1. **Catálogo/venta de tienda (P5 / FR-009):** queda **fuera del MVP**.
+>    Se mueve a Fase 2. Motivo: solo 2 de las fuentes entrevistadas hablan
+>    de venta de productos; el problema central validado por la mayoría de
+>    entrevistas es agenda + recordatorios + historial médico veterinario.
+> 2. **Filtros de búsqueda (tipo de servicio, calificación):** quedan
+>    **fuera del MVP**. Se mantiene únicamente búsqueda por cercanía
+>    (respaldada por la fuente de Isaac). Se revisita en Fase 2.
+> 3. **Datos del "Plan de Estrategia Comercial"** (Army Paws, PreamVet,
+>    Clínica del Sur, "25 horas/mes", "30-45 clientes recuperados", etc.):
+>    **se descartan definitivamente** de este spec por no tener
+>    trazabilidad a una transcripción real.
+> 4. **Sección no revisada de `Sin_titulo (2).md` (líneas 57–347):** no se
+>    pudo revisar por falta de disponibilidad del mentor. Se deja como
+>    **riesgo conocido**, no como bloqueante: si aparece contenido nuevo
+>    más adelante, se evaluará como cambio incremental al spec, no se
+>    asume ni se inventa contenido a partir de ella.
+
+> ⚠️ **Nota de trazabilidad:** este documento se construyó a partir de las
+> transcripciones reales visibles en `Sin_titulo (2).md`: entrevistas a
+> Helpet (veterinaria), Isaac, Fredy Toabanda, Pelusa (veterinaria, 2
+> sucursales), Dr. Carlos Mendoza (tienda de mascotas) y Dr. Alejandro
+> Paredes (tienda de accesorios). El archivo tiene una sección central
+> (líneas 57–347) que no fue revisada todavía — este spec debe
+> actualizarse una vez que se confirme su contenido.
+>
+> Los datos y nombres del documento "Plan de Estrategia Comercial"
+> (Army Paws, PreamVet, Clínica del Sur, cifras como "25 horas/mes" o
+> "30-45 clientes recuperados") **no se usaron aquí** porque no fue
+> posible verificarlos contra la transcripción original. No deben darse
+> por válidos hasta confirmar su fuente.
+
+---
 
 ## Resumen del problema
 
@@ -63,6 +102,11 @@ gestionando pedidos uno por uno vía WhatsApp.
 > fotos... esperamos la transferencia. Todo ese cruce de mensajes nos
 > hace perder fácil unos 15 minutos por cliente"* — Dr. Carlos Mendoza.
 
+> **Resuelto (equipo):** Fuera del MVP, pasa a Fase 2. Ambos dueños de
+> tienda piden condiciones específicas para adoptar la app — comisiones
+> bajas (Mendoza) y poder configurar tallas/colores fácilmente (Paredes) —
+> lo que implica un módulo de e-commerce más complejo que el resto del
+> MVP, centrado en servicios veterinarios, no en venta de productos.
 
 ---
 
@@ -95,10 +139,16 @@ gestionando pedidos uno por uno vía WhatsApp.
 - **FR-008:** El sistema debe permitir buscar veterinarias cercanas
   según ubicación.
 
+> **Resuelto (equipo):** Fuera del MVP. Ninguna entrevista revisada
+> menciona filtros de búsqueda (tipo de servicio, calificación); se deja
+> solo búsqueda por cercanía para esta fase. Se revisará si la sección
+> pendiente de `Sin_titulo (2).md` aporta evidencia para reincorporarlo
+> en Fase 2.
 
-**Catálogo de tienda (pendiente de confirmar alcance — ver P5)**
-- **FR-009:** El sistema debe permitir a tiendas de mascotas publicar su
-  catálogo de productos para pedidos a domicilio.
+**Catálogo de tienda (Fase 2 — fuera del MVP, ver P5)**
+- **FR-009:** *(Fase 2)* El sistema debe permitir a tiendas de mascotas
+  publicar su catálogo de productos para pedidos a domicilio. No se
+  implementa en el MVP.
 
 ---
 
@@ -112,6 +162,11 @@ gestionando pedidos uno por uno vía WhatsApp.
   de su mascota sin depender de un carnet físico, incluso si cambió de
   veterinaria.
 
+> **Resuelto (equipo):** Se descartan las cifras del "Plan de Estrategia
+> Comercial" por no tener trazabilidad verificable. Los criterios de
+> éxito arriba se mantienen cualitativos (reducción medible, dejar de
+> responder manualmente, consulta sin carnet físico) hasta contar con
+> datos reales post-lanzamiento del MVP para fijar metas numéricas.
 
 ---
 
@@ -128,26 +183,31 @@ gestionando pedidos uno por uno vía WhatsApp.
 
 ---
 
-## Fuera de alcance / por confirmar
+## Fuera de alcance (decisión del equipo)
 
-- Venta de productos y catálogo de tienda — su inclusión depende de
-  resolver el `[NEEDS CLARIFICATION]` de la sección P5.
+- **Venta de productos y catálogo de tienda (FR-009):** fuera del MVP,
+  planificado para Fase 2.
+- **Filtros de búsqueda avanzados** (tipo de servicio, calificación):
+  fuera del MVP, planificado para Fase 2.
 - Cualquier funcionalidad mencionada solo en el "Plan de Estrategia
   Comercial" pero no verificada en la transcripción original (reseñas
   verificadas, validación de receta médica, suscripción premium, etc.)
-  — no se incluyó aquí hasta confirmar su origen real.
+  — **descartada definitivamente**, no forma parte del roadmap actual.
 
 ---
 
 ## Checklist de validación antes de aprobar
 
-- [ ] Revisar el contenido completo de `Sin_titulo (2).md` (líneas
-      57–347), no revisado en esta versión.
-- [ ] Confirmar si los nombres de negocios y cifras del "Plan de
-      Estrategia Comercial" (Army Paws, PreamVet, Clínica del Sur, etc.)
-      existen en alguna transcripción real, o descartarlos si no.
-- [ ] Resolver los `[NEEDS CLARIFICATION]` marcados arriba.
-- [ ] Confirmar con el equipo si aún faltan entrevistas a más
-      veterinarios (solo 2 veterinarias entrevistadas: Helpet y Pelusa).
-- [ ] Aprobado por el Mentor de investigación antes de avanzar a
-      `/speckit-plan`.
+- [x] Resolver los `[NEEDS CLARIFICATION]` marcados arriba — resuelto por
+      el equipo (ver nota de resolución al inicio del documento).
+- [x] Confirmar si los nombres de negocios y cifras del "Plan de
+      Estrategia Comercial" existen en alguna transcripción real —
+      **descartados** por falta de trazabilidad.
+- [ ] **Riesgo conocido, no bloqueante:** revisar el contenido completo
+      de `Sin_titulo (2).md` (líneas 57–347) cuando esté disponible; si
+      surge evidencia nueva, se evalúa como cambio incremental al spec.
+- [ ] **Riesgo conocido, no bloqueante:** confirmar con el equipo si aún
+      faltan entrevistas a más veterinarios (solo 2 entrevistadas: Helpet
+      y Pelusa).
+- [x] Aprobado por el equipo (sin disponibilidad del mentor de
+      investigación) — se avanza a `/speckit-plan` bajo esta condición.
