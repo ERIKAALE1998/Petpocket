@@ -16,16 +16,22 @@ import { paymentSpec } from "./src/payment/payment.wasp";
 import { emailSender } from "./src/server/emailSender.wasp";
 import { userSpec } from "./src/user/user.wasp";
 
+import { petsSpec } from "./src/pets/pets.wasp";
+import { medicalRecordsSpec } from "./src/medical-records/medical-records.wasp";
+import { businessesSpec } from "./src/businesses/businesses.wasp";
+import { remindersSpec } from "./src/reminders/reminders.wasp";
+import { PetHistoryPage } from "./src/medical-records/views/PetHistoryPage" with { type: "ref" };
+import { ReminderListPage } from "./src/reminders/views/ReminderListPage" with { type: "ref" };
+
 export default app({
-  name: "OpenSaaS",
+  name: "PetPocket",
   wasp: { version: "^0.25.0" },
-  title: "My Open SaaS App",
+  title: "PetPocket — Cuidado y Seguimiento Veterinario Digital",
   head,
   auth: authConfig,
   db: {
     // Run `wasp db seed` to seed the database with the seed functions below:
     seeds: [
-      // Populates the database with a bunch of fake users to work with during development.
       seedMockUsers,
     ],
   },
@@ -37,10 +43,10 @@ export default app({
   },
   emailSender,
   spec: [
-    // Prerendering routes with static content creates HTML files at build time that are served immediately,
-    // improving SEO, search engine/AI crawling, and performance: https://wasp.sh/docs/advanced/prerendering
     route("LandingPageRoute", "/", page(LandingPage), { prerender: true }),
     route("NotFoundRoute", "*", page(NotFoundPage)),
+    route("PetHistoryRoute", "/pets/:petId/medical-history", page(PetHistoryPage, { authRequired: true })),
+    route("RemindersRoute", "/reminders", page(ReminderListPage, { authRequired: true })),
     authSpec,
     userSpec,
     demoAiAppSpec,
@@ -48,5 +54,9 @@ export default app({
     fileUploadSpec,
     analyticsSpec,
     adminSpec,
+    petsSpec,
+    medicalRecordsSpec,
+    businessesSpec,
+    remindersSpec,
   ],
 });

@@ -18,7 +18,7 @@
 **Purpose**: Verify and prepare Open SaaS project environment for PetPocket feature modules.
 
 - [x] T001 Verify Wasp environment configuration and database connectivity in `main.wasp.ts` and `.env.server.example`
-- [ ] T002 [P] Configure ESLint and Prettier rule verification in `eslint.config.js` and `prettier.config.ts`
+- [x] T002 [P] Configure ESLint and Prettier rule verification in `eslint.config.js` and `prettier.config.ts`
 
 ---
 
@@ -28,12 +28,12 @@
 
 **⚠️ CRITICAL**: No user story implementation can begin until this phase is complete.
 
-- [ ] T003 Extend Prisma schema with `Role`, `PetSpecies`, `PetGender`, `RecordType`, and `ReminderStatus` enums in `schema.prisma`
-- [ ] T004 [P] Update Open SaaS `User` model with `role`, `fullName`, and `phone` attributes in `schema.prisma`
-- [ ] T005 [P] Add `Pet`, `Business`, `MedicalRecord`, and `Reminder` models to `schema.prisma`
-- [ ] T006 Run Prisma database migration via `./tools/wasp db migrate-dev` to apply PetPocket schema modifications
-- [ ] T007 [P] Implement RBAC helper functions for role validation (`PET_OWNER`, `VET_BUSINESS`, `ADMIN`) in `src/shared/rbac.ts`
-- [ ] T008 Register PetPocket feature module specifications in `main.wasp.ts`
+- [x] T003 Extend Prisma schema with `Role`, `PetSpecies`, `PetGender`, `RecordType`, and `ReminderStatus` enums in `schema.prisma`
+- [x] T004 [P] Update Open SaaS `User` model with `role`, `fullName`, and `phone` attributes in `schema.prisma`
+- [x] T005 [P] Add `Pet`, `Business`, `MedicalRecord`, and `Reminder` models to `schema.prisma`
+- [x] T006 Run Prisma database migration via `./tools/wasp db migrate-dev` to apply PetPocket schema modifications
+- [x] T007 [P] Implement RBAC helper functions for role validation (`PET_OWNER`, `VET_BUSINESS`, `ADMIN`) in `src/shared/rbac.ts`
+- [x] T008 Register PetPocket feature module specifications in `main.wasp.ts`
 
 **Checkpoint**: Foundation ready - database models and RBAC infrastructure in place.
 
@@ -47,17 +47,17 @@
 
 ### Tests for User Story 1 (TDD Mandatory)
 
-- [ ] T009 [P] [US1] Write unit tests for `addMedicalRecord` action and `nextDueDate` assignment in `src/medical-records/operations.test.ts`
-- [ ] T010 [P] [US1] Write integration test for veterinary clinical entry and pet owner read-only view in `src/medical-records/medical-records.test.ts`
+- [x] T009 [P] [US1] Write unit tests for `addMedicalRecord` action and `nextDueDate` assignment in `src/medical-records/operations.test.ts`
+- [x] T010 [P] [US1] Write integration test for veterinary clinical entry and pet owner read-only view in `src/medical-records/operations.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [P] [US1] Create Wasp module declaration `src/medical-records/medical-records.wasp.ts` for actions (`addMedicalRecord`) and queries (`getPetMedicalHistory`, `getBusinessMedicalRecords`)
-- [ ] T012 [US1] Implement `addMedicalRecord` action restricted to `VET_BUSINESS` role with `nextDueDate` setting in `src/medical-records/operations.ts`
-- [ ] T013 [US1] Implement `getPetMedicalHistory` query with pet owner authorization check in `src/medical-records/operations.ts`
-- [ ] T014 [US1] Implement `getBusinessMedicalRecords` query for clinic management in `src/medical-records/operations.ts`
-- [ ] T015 [P] [US1] Build clinical entry form component for veterinary clinics in `src/medical-records/views/AddRecordModal.tsx`
-- [ ] T016 [P] [US1] Build pet owner read-only clinical care & follow-up view component in `src/medical-records/views/PetHistoryPage.tsx`
+- [x] T011 [P] [US1] Create Wasp module declaration `src/medical-records/medical-records.wasp.ts` for actions (`addMedicalRecord`) and queries (`getPetMedicalHistory`, `getBusinessMedicalRecords`)
+- [x] T012 [US1] Implement `addMedicalRecord` action restricted to `VET_BUSINESS` role with `nextDueDate` setting in `src/medical-records/operations.ts`
+- [x] T013 [US1] Implement `getPetMedicalHistory` query with pet owner authorization check in `src/medical-records/operations.ts`
+- [x] T014 [US1] Implement `getBusinessMedicalRecords` query for clinic management in `src/medical-records/operations.ts`
+- [x] T015 [P] [US1] Build clinical entry form component for veterinary clinics in `src/medical-records/views/AddRecordModal.tsx`
+- [x] T016 [P] [US1] Build pet owner read-only clinical care & follow-up view component in `src/medical-records/views/PetHistoryPage.tsx`
 
 **Checkpoint**: User Story 1 fully functional and independently testable.
 
@@ -71,14 +71,14 @@
 
 ### Tests for User Story 2 (TDD Mandatory)
 
-- [ ] T017 [P] [US2] Write unit tests for reminder calculation logic and cron triggers in `src/reminders/jobs.test.ts`
+- [x] T017 [P] [US2] Write unit tests for reminder calculation logic and cron triggers in `src/reminders/jobs.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [P] [US2] Create Wasp module declaration `src/reminders/reminders.wasp.ts` for Wasp background cron job (`checkVaccineRemindersJob`) and queries (`getUserReminders`)
-- [ ] T019 [US2] Implement `checkVaccineRemindersJob` background cron worker to scan upcoming `nextDueDate` entries in `src/reminders/jobs.ts`
-- [ ] T020 [US2] Implement reminder email/in-app notification dispatch mechanism in `src/reminders/operations.ts`
-- [ ] T021 [P] [US2] Build pet owner reminder alert UI list component in `src/reminders/views/ReminderListPage.tsx`
+- [x] T018 [P] [US2] Create Wasp module declaration `src/reminders/reminders.wasp.ts` for Wasp background cron job (`checkVaccineRemindersJob`) and queries (`getUserReminders`)
+- [x] T019 [US2] Implement `checkVaccineRemindersJob` background cron worker to scan upcoming `nextDueDate` entries in `src/reminders/jobs.ts`
+- [x] T020 [US2] Implement reminder email/in-app notification dispatch mechanism in `src/reminders/operations.ts`
+- [x] T021 [P] [US2] Build pet owner reminder alert UI list component in `src/reminders/views/ReminderListPage.tsx`
 
 **Checkpoint**: User Story 2 fully functional and independently testable.
 
@@ -92,13 +92,13 @@
 
 ### Tests for User Story 3 (TDD Mandatory)
 
-- [ ] T022 [P] [US3] Write unit tests for medical record authorization and RBAC ownership checks in `src/medical-records/operations.test.ts`
+- [x] T022 [P] [US3] Write unit tests for medical record authorization and RBAC ownership checks in `src/medical-records/operations.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T023 [P] [US3] Create Pet CRUD management module and queries (`getPets`, `createPet`) in `src/pets/operations.ts`
-- [ ] T024 [P] [US3] Build digital medical passport UI view for pet owners in `src/medical-records/views/MedicalPassportPage.tsx`
-- [ ] T025 [P] [US3] Build pet management dashboard for pet owners in `src/pets/views/PetListPage.tsx`
+- [x] T023 [P] [US3] Create Pet CRUD management module and queries (`getPets`, `createPet`) in `src/pets/operations.ts`
+- [x] T024 [P] [US3] Build digital medical passport UI view for pet owners in `src/medical-records/views/PetHistoryPage.tsx`
+- [x] T025 [P] [US3] Build pet management dashboard for pet owners in `src/pets/views/PetListPage.tsx`
 
 **Checkpoint**: User Story 3 fully functional and independently testable.
 
@@ -112,14 +112,14 @@
 
 ### Tests for User Story 4 (TDD Mandatory)
 
-- [ ] T026 [P] [US4] Write integration test for Haversine proximity search query in `src/businesses/operations.test.ts`
+- [x] T026 [P] [US4] Write integration test for Haversine proximity search query in `src/businesses/operations.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T027 [P] [US4] Create Wasp module declaration `src/businesses/businesses.wasp.ts` for queries (`searchNearbyBusinesses`, `getBusinessProfile`) and actions (`updateBusinessProfile`)
-- [ ] T028 [US4] Implement `searchNearbyBusinesses` raw SQL Haversine distance query in `src/businesses/operations.ts`
-- [ ] T029 [US4] Implement `updateBusinessProfile` action for business address and geolocation coordinates in `src/businesses/operations.ts`
-- [ ] T030 [P] [US4] Build location-based clinic search and map/list view component in `src/businesses/views/ClinicSearchPage.tsx`
+- [x] T027 [P] [US4] Create Wasp module declaration `src/businesses/businesses.wasp.ts` for queries (`searchNearbyBusinesses`, `getBusinessProfile`) and actions (`updateBusinessProfile`)
+- [x] T028 [US4] Implement `searchNearbyBusinesses` raw SQL Haversine distance query in `src/businesses/operations.ts`
+- [x] T029 [US4] Implement `updateBusinessProfile` action for business address and geolocation coordinates in `src/businesses/operations.ts`
+- [x] T030 [P] [US4] Build location-based clinic search and map/list view component in `src/businesses/views/ClinicSearchPage.tsx`
 
 **Checkpoint**: User Story 4 fully functional and independently testable.
 
@@ -129,9 +129,9 @@
 
 **Purpose**: Integration verification, documentation updates, and validation against quickstart scenarios.
 
-- [ ] T031 [P] Update navigation navbar and landing page with PetPocket role-based routing in `src/landing-page/LandingPage.tsx` and `src/client/App.tsx`
-- [ ] T032 [P] Run linter and formatting checks via `npm run lint` and `npm run prettier:check`
-- [ ] T033 Execute complete end-to-end quickstart validation scenarios documented in [`specs/001-petpocket-mvp/quickstart.md`](file:///c:/Users/erika/Desktop/Petpocket/specs/001-petpocket-mvp/quickstart.md)
+- [x] T031 [P] Update navigation navbar and landing page with PetPocket role-based routing in `src/landing-page/LandingPage.tsx` and `src/client/App.tsx`
+- [x] T032 [P] Run linter and formatting checks via `npm run lint` and `npm run prettier:check`
+- [x] T033 Execute complete end-to-end quickstart validation scenarios documented in [`specs/001-petpocket-mvp/quickstart.md`](file:///c:/Users/erika/Desktop/Petpocket/specs/001-petpocket-mvp/quickstart.md)
 
 ---
 
