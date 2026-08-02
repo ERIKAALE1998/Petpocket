@@ -17,6 +17,8 @@
 >
 > Los datos y nombres del documento "Plan de Estrategia Comercial" (Army Paws, PreamVet, Clínica del Sur, cifras como "25 horas/mes" o "30-45 clientes recuperados") **no se usaron aquí** porque no fue posible verificarlos contra la transcripción original. No deben darse por válidos hasta confirmar su fuente.
 
+> 🔁 **CORRECCIÓN DE ALCANCE (equipo + ingeniera, 1 de agosto de 2026):** La versión anterior de este documento describía User Story 1 con un modelo de **auto-reserva de horarios por el dueño** (el dueño elige un slot disponible y reserva). Esto **no corresponde** a lo acordado por el equipo con la ingeniera. El modelo correcto es: **la veterinaria registra la atención realizada y define la próxima fecha de seguimiento/control**; el dueño solo puede **consultar** esa información, no elegir horarios por su cuenta. Esta corrección reemplaza la lógica de agendamiento tipo "reserva de turno" en toda la User Story 1, sus Acceptance Scenarios, el Edge Case de reserva simultánea, y los requisitos FR-001 a FR-003. El resto del documento no cambia.
+
 ---
 
 ## Resumen del problema
@@ -27,20 +29,23 @@ Tanto veterinarias como dueños de mascotas dependen de procesos manuales (Whats
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Agenda de citas automatizada para negocios (Priority: P1)
+### User Story 1 - Registro de atención y seguimiento clínico por la veterinaria (Priority: P1)
 
-Como veterinaria (Helpet, Pelusa), quiero que las citas se reserven automáticamente sin depender de WhatsApp, para evitar que dos personas pidan el mismo horario y para no perder espacios por inasistencias sin aviso.
+Como veterinaria (Helpet, Pelusa), quiero registrar cada atención realizada a una mascota y definir la próxima fecha de seguimiento/control directamente en el sistema, para llevar un historial clínico ordenado sin depender de WhatsApp o cuadernos, y para que el sistema genere el recordatorio automático de esa próxima fecha sin que el dueño tenga que elegir un horario por su cuenta.
 
 > **Fuente:** *"Cuando tenemos muchos pacientes es difícil responder todos los mensajes. A veces dos personas piden el mismo horario"* — Helpet. *"Perdemos ese espacio porque muchas veces no avisan que no van a asistir"* — Helpet.
 
-**Why this priority**: Funcionalidad operativa central validada directamente por veterinarias en entrevistas reales. Evita la saturación de chats y la pérdida de turnos por inasistencia.
+> **Corrección de alcance (equipo + ingeniera, 1 de agosto de 2026):** el flujo NO es que el dueño reserve un horario disponible por su cuenta (modelo tipo "reserva de turno"). El flujo real es: la veterinaria atiende a la mascota, registra la atención en el sistema, y define la próxima fecha de control/seguimiento. El sistema usa esa fecha para generar el recordatorio automático (ver User Story 2). El dueño solo visualiza esta información, no la edita ni elige horarios.
 
-**Independent Test**: Registrar un negocio con disponibilidad de horarios, ingresar como dueño de mascota, agendar una cita y verificar que el horario quede bloqueado para otros usuarios sin intervención manual.
+**Why this priority**: Funcionalidad operativa central validada directamente por veterinarias en entrevistas reales. Evita la saturación de chats y ordena el registro clínico sin depender de WhatsApp o cuadernos.
+
+**Independent Test**: Ingresar como veterinaria, registrar una atención para una mascota existente, definir una próxima fecha de seguimiento, y verificar que el dueño de la mascota pueda visualizar esa atención y la fecha definida (en modo solo lectura) desde su perfil.
 
 **Acceptance Scenarios**:
 
-1. **Given** un negocio con disponibilidad definida de 09:00 a 10:00, **When** un dueño de mascota reserva el turno de las 09:00, **Then** el sistema confirma la cita y bloquea ese espacio para cualquier otro usuario.
-2. **Given** una cita agendada, **When** el dueño invalida o cancela su asistencia, **Then** el sistema notifica al negocio y libera automáticamente la disponibilidad en la agenda.
+1. **Given** una veterinaria autenticada y una mascota registrada, **When** la veterinaria registra una atención con fecha, tipo de atención y observaciones, **Then** el sistema guarda la atención en el historial de la mascota y la asocia al negocio que la registró.
+2. **Given** una atención recién registrada, **When** la veterinaria define una próxima fecha de seguimiento/control, **Then** el sistema almacena esa fecha y la usa como base para generar el recordatorio automático correspondiente (ver User Story 2).
+3. **Given** una atención y próxima fecha ya registradas por la veterinaria, **When** el dueño de la mascota accede a su perfil, **Then** puede visualizar la atención y la próxima fecha definida, pero no puede modificarlas ni elegir un horario por su cuenta.
 
 ---
 
@@ -106,7 +111,7 @@ Como tienda de mascotas (Dr. Carlos Mendoza, Dr. Alejandro Paredes), quiero publ
 
 ### Edge Cases
 
-- **Reserva simultánea atómica**: Ante múltiples intentos de reserva en la misma fracción de segundo, el motor de reservas de Wasp/Prisma debe manejar bloqueos transaccionales para asignar la cita únicamente al primer usuario y notificar al segundo que el turno fue tomado.
+- **Registro simultáneo de atenciones**: Si la veterinaria intenta registrar dos atenciones en conflicto para la misma mascota/negocio en el mismo momento, el sistema debe validar la integridad del registro mediante transacciones atómicas (Prisma), evitando duplicados o inconsistencias — esto es una validación de integridad de datos, no una "reserva" competida por el dueño.
 - **Fallos en canales de notificación**: Si el envío automático de un recordatorio falla, la tarea programada debe reintentar con estrategia de retroceso (backoff) y registrar el error en logs estructurados.
 - **Control de acceso por rol (RBAC)**: Si un usuario no autorizado intenta acceder al historial médico de una mascota de la cual no es propietario ni veterinaria tratante, la aplicación debe responder con denegación 403 Forbidden.
 
@@ -114,10 +119,10 @@ Como tienda de mascotas (Dr. Carlos Mendoza, Dr. Alejandro Paredes), quiero publ
 
 ## Functional Requirements (Requisitos funcionales)
 
-**Agendamiento**
-- **FR-001:** El sistema debe permitir a los negocios definir su disponibilidad y evitar que dos citas se asignen al mismo horario.
-- **FR-002:** El sistema debe permitir a los dueños reservar una cita directamente, sin depender de respuesta manual por WhatsApp.
-- **FR-003:** El sistema debe notificar al negocio cuando un cliente no confirme o cancele su asistencia, para poder liberar el espacio a tiempo.
+**Registro de atención y seguimiento clínico**
+- **FR-001:** El sistema debe permitir a la veterinaria registrar una atención/consulta realizada a una mascota, incluyendo fecha, tipo de atención y observaciones.
+- **FR-002:** El sistema debe permitir a la veterinaria definir la próxima fecha de seguimiento/control al registrar una atención.
+- **FR-003:** El sistema debe permitir al dueño de la mascota visualizar (solo lectura) las atenciones registradas y la próxima fecha de seguimiento definida por la veterinaria, sin poder modificarla ni elegir horarios él mismo.
 
 **Recordatorios**
 - **FR-004:** El sistema debe generar recordatorios automáticos de vacunas y desparasitaciones próximas.
@@ -137,8 +142,8 @@ Como tienda de mascotas (Dr. Carlos Mendoza, Dr. Alejandro Paredes), quiero publ
 
 ## Success Criteria (Criterios de éxito)
 
-- **SC-001:** Reducción medible de citas perdidas por inasistencia no avisada, comparado con el manejo actual por WhatsApp.
-- **SC-002:** Los negocios dejan de necesitar responder manualmente cada solicitud de cita o recordatorio de vacuna.
+- **SC-001:** Reducción medible de atenciones sin seguimiento registrado, comparado con el manejo actual por WhatsApp/cuadernos.
+- **SC-002:** Los negocios dejan de necesitar responder manualmente cada recordatorio de vacuna o control.
 - **SC-003:** Un dueño de mascota puede consultar el historial completo de su mascota sin depender de un carnet físico, incluso si cambió de veterinaria.
 
 > **Nota de resolución:** Los criterios se mantienen cualitativos hasta contar con datos de telemetría post-lanzamiento del MVP para fijar valores numéricos definitivos.
@@ -149,10 +154,11 @@ Como tienda de mascotas (Dr. Carlos Mendoza, Dr. Alejandro Paredes), quiero publ
 
 - **User / Usuario** — dueño de mascota (`PET_OWNER`), negocio (`VET_BUSINESS`) o administrador (`ADMIN`).
 - **Pet / Mascota** — animal registrado por un dueño.
-- **MedicalRecord / Historial Médico** — registro de vacunas y tratamientos de una mascota.
+- **MedicalRecord / Historial Médico** — registro de vacunas y tratamientos de una mascota, incluye la próxima fecha de seguimiento definida por la veterinaria.
 - **Business / Negocio** — veterinaria registrada.
-- **Appointment / Cita** — turno solicitado entre un dueño y un negocio.
-- **Reminder / Recordatorio** — notificación automática de vacuna o control próximo.
+- **Reminder / Recordatorio** — notificación automática de vacuna o control próximo, generada a partir de la próxima fecha de seguimiento registrada en el historial médico.
+
+> **Nota:** la entidad **Appointment / Cita** de la versión anterior (con lógica de "reserva de horario por el dueño") queda descartada por la corrección de alcance del 1 de agosto de 2026. El seguimiento clínico ahora vive dentro de `MedicalRecord` (campo de próxima fecha), no como una entidad de reserva independiente.
 
 ---
 
@@ -160,6 +166,7 @@ Como tienda de mascotas (Dr. Carlos Mendoza, Dr. Alejandro Paredes), quiero publ
 
 - **Venta de productos y catálogo de tienda (FR-009):** fuera del MVP, planificado para Fase 2.
 - **Filtros de búsqueda avanzados** (tipo de servicio, calificación): fuera del MVP, planificado para Fase 2.
+- **Auto-reserva de horarios por el dueño** (modelo tipo "reserva de turno"): descartado por corrección de alcance del equipo + ingeniera (1 de agosto de 2026). El dueño no elige horarios; la veterinaria registra la atención y define la próxima fecha.
 - Cualquier funcionalidad mencionada solo en el "Plan de Estrategia Comercial" pero no verificada en la transcripción original (reseñas verificadas, validación de receta médica, suscripción premium, etc.) — **descartada definitivamente**.
 
 ---
@@ -168,6 +175,7 @@ Como tienda de mascotas (Dr. Carlos Mendoza, Dr. Alejandro Paredes), quiero publ
 
 - [x] Resolver los `[NEEDS CLARIFICATION]` marcados arriba — resuelto por el equipo.
 - [x] Confirmar trazabilidad de datos — cifras no verificables del Plan de Estrategia Comercial **descartadas**.
+- [x] **Corrección de alcance aplicada:** User Story 1 corregida de "auto-reserva de horario por el dueño" a "registro de atención + próxima fecha por la veterinaria" (equipo + ingeniera, 1 de agosto de 2026).
 - [x] **Riesgo conocido, no bloqueante:** revisar contenido de `Sin_titulo (2).md` (líneas 57–347) cuando esté disponible.
 - [x] **Riesgo conocido, no bloqueante:** evaluar adición de entrevistas futuras a más veterinarios.
-- [x] Aprobado por el equipo — listo para `/speckit-plan`.
+- [x] Aprobado por el equipo — listo para regenerar `/speckit-plan` y `/speckit-tasks` con la lógica corregida.
