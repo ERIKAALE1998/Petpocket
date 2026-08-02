@@ -1,28 +1,26 @@
 # Research & Architectural Decisions: PetPocket — MVP
 
 **Feature Branch**: `001-petpocket-mvp`  
-**Date**: 2026-08-01  
-**Spec**: [spec.md](file:///c:/Users/TonyJ0711/Desktop/Documentos/petpocket/specs/001-petpocket-mvp/spec.md)
+**Date**: 2026-08-01 (Corrected Scope)  
+**Spec**: [spec.md](file:///c:/Users/erika/Desktop/Petpocket/specs/001-petpocket-mvp/spec.md)
 
 ---
 
-## 1. Appointment Scheduling & Anti-Collision Engine
+## 1. Clinical Attention Registration & Follow-Up Tracking Engine
 
 ### Context & Challenge
-The system must guarantee zero double-booking across veterinary business hours without manual WhatsApp confirmation. When two pet owners attempt to book the exact same slot concurrently, only one booking must succeed.
+Under the corrected MVP scope (August 1, 2026), pet owners do NOT book or reserve appointment slots directly. Instead, veterinary clinic staff register completed clinical attentions (vaccine, deworming, consultation, surgery) and record the next follow-up/control date (`nextDueDate`). Pet owners access this information in read-only mode from their profile.
 
 ### Decision
-- **Mechanism**: Use Prisma interactive database transactions (`prisma.$transaction`) with PostgreSQL atomic conditional updates on appointment slot availability.
+- **Mechanism**: Use `MedicalRecord` as the core clinical entity storing both completed treatments (`dateAdministered`) and scheduled follow-up dates (`nextDueDate`).
 - **Pattern**:
-  1. Business defines operating schedules and slot duration (e.g., 30 mins) stored as `BusinessSchedule` and `AppointmentSlot` records or dynamically calculated.
-  2. Booking Action receives `businessId`, `slotTime`, `petId`, `serviceType`.
-  3. Inside an atomic Prisma transaction:
-     - Check if an active `Appointment` exists for `businessId` at `slotTime` (where status is `CONFIRMED` or `PENDING`).
-     - If collision exists, abort transaction immediately with `SlotAlreadyBookedError`.
-     - If clear, create `Appointment` with status `CONFIRMED`.
-- **Rationale**: PostgreSQL ACID transaction guarantees atomic execution under concurrent requests. Prevents race conditions natively without extra caching infrastructure (e.g. Redis).
+  1. Action `addMedicalRecord` is restricted to authenticated `VET_BUSINESS` users.
+  2. The action receives `petId`, `recordType`, `title`, `description`, `dateAdministered`, and optionally `nextDueDate`.
+  3. Inside a Prisma transaction, the system creates the `MedicalRecord` entry and associates it with the business's `Business` profile and the target `Pet`.
+  4. Query `getPetMedicalHistory` allows `PET_OWNER` users to view all clinical records for their registered pets in read-only mode, including upcoming control dates.
+- **Rationale**: Replaces complex slot anti-collision logic with a straightforward clinical record flow that accurately matches veterinary operational reality and eliminates user booking friction.
 - **Alternatives Considered**:
-  - *Redis Distributed Lock*: Rejected because adding Redis violates Principle IV (Simplicidad sobre Abstracción Prematura) since Open SaaS / PostgreSQL natively supports atomic transactions.
+  - *Separate Appointment booking entity*: Rejected because user research showed pet owners do not self-schedule; clinics dictate follow-up dates post-attention.
 
 ---
 
@@ -35,7 +33,7 @@ The system must generate and dispatch vaccination and control reminders automati
 - **Mechanism**: Use Wasp's built-in Job/Cron feature (`job` in Wasp spec).
 - **Pattern**:
   1. Define a daily Wasp cron job (`checkVaccineRemindersJob`) executing at 08:00 UTC.
-  2. Query `MedicalRecord` entries where `nextDueDate` is within the configured window (e.g., 7 days ahead) and no `Reminder` has been created for this event.
+  2. Query `MedicalRecord` entries where `nextDueDate` falls within the reminder window (e.g., 7 days ahead) and no pending `Reminder` has been created for this record.
   3. Create `Reminder` records with status `PENDING` and trigger system notification / email dispatch via Wasp's built-in `emailSender`.
   4. Allow veterinary business users to trigger explicit reminder dispatches from their dashboard for upcoming controls.
 - **Rationale**: Reuses Wasp's native background job runner (`pg-boss` / Wasp job queue). Zero external infrastructure required.
@@ -56,7 +54,7 @@ Medical history must belong to the pet owner and remain accessible even if the o
   2. `MedicalRecord` is linked directly to `Pet` and references the `Business` (veterinary clinic) that created the entry.
   3. Access Control (RBAC):
      - `PET_OWNER`: Has READ access to all `MedicalRecord` entries belonging to their registered `Pet` objects at all times.
-     - `VET_BUSINESS`: Has READ/WRITE access to `MedicalRecord` entries for pets that have an active or historical `Appointment` with that business.
+     - `VET_BUSINESS`: Has READ/WRITE access to create `MedicalRecord` entries for pets brought to their clinic.
      - `ADMIN`: Has platform oversight access.
 - **Rationale**: Eliminates paper carnet dependency (Isaac scenario) and prevents data lock-in to a single clinic.
 
@@ -71,7 +69,7 @@ Pet owners need to find nearby veterinary clinics based on their current geograp
 - **Mechanism**: PostgreSQL Haversine distance formula calculation via raw SQL query in Prisma (`prisma.$queryRaw`).
 - **Pattern**:
   1. `Business` model stores `latitude` (Float) and `longitude` (Float).
-  2. Search Query accepts `userLat`, `userLng`, `maxDistanceKm` (default: 10km).
+  2. Search Query accepts `userLat`, `userLng`, `radiusKm` (default: 10km).
   3. PostgreSQL calculates distance using standard Haversine formula:
      $$\text{Distance} = 6371 \times 2 \times \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \text{lat}}{2}\right) + \cos(\text{lat}_1)\cos(\text{lat}_2)\sin^2\left(\frac{\Delta \text{lng}}{2}\right)}\right)$$
   4. Returns `Business` records ordered by calculated distance.
@@ -87,7 +85,7 @@ Pet owners need to find nearby veterinary clinics based on their current geograp
 Open SaaS comes with a default `User` model (`isAdmin` Boolean). PetPocket requires distinct business roles (`PET_OWNER`, `VET_BUSINESS`, `ADMIN`).
 
 ### Decision
-- **Mechanism**: Add a `role` String / Enum field to the Open SaaS `User` model (`PET_OWNER`, `VET_BUSINESS`, `ADMIN`) with `PET_OWNER` as default.
+- **Mechanism**: Add a `role` Enum field to the Open SaaS `User` model (`PET_OWNER`, `VET_BUSINESS`, `ADMIN`) with `PET_OWNER` as default.
 - **Pattern**:
   1. Wasp actions and queries inspect `context.user` and enforce role checks:
      ```ts

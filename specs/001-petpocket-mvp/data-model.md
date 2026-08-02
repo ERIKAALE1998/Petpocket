@@ -1,8 +1,8 @@
 # Data Model & Schema Specification: PetPocket — MVP
 
 **Feature Branch**: `001-petpocket-mvp`  
-**Date**: 2026-08-01  
-**Spec**: [spec.md](file:///c:/Users/TonyJ0711/Desktop/Documentos/petpocket/specs/001-petpocket-mvp/spec.md)
+**Date**: 2026-08-01 (Corrected Scope)  
+**Spec**: [spec.md](file:///c:/Users/erika/Desktop/Petpocket/specs/001-petpocket-mvp/spec.md)
 
 ---
 
@@ -13,11 +13,8 @@ erDiagram
     User ||--o{ Pet : "owns"
     User ||--o| Business : "manages (if VET_BUSINESS)"
     Pet ||--o{ MedicalRecord : "has"
-    Pet ||--o{ Appointment : "books"
-    Business ||--o{ Appointment : "provides"
     Business ||--o{ MedicalRecord : "creates"
-    MedicalRecord ||--o{ Reminder : "triggers"
-    Appointment ||--o{ Reminder : "triggers"
+    MedicalRecord ||--o{ Reminder : "triggers (via nextDueDate)"
 
     User {
         string id PK
@@ -36,6 +33,7 @@ erDiagram
         string breed
         datetime birthDate
         string gender "MALE | FEMALE"
+        string microchipId
     }
 
     Business {
@@ -47,15 +45,6 @@ erDiagram
         float longitude
         string phone
         json workingHours
-    }
-
-    Appointment {
-        string id PK
-        string petId FK
-        string businessId FK
-        datetime dateTime
-        string status "PENDING | CONFIRMED | CANCELLED | COMPLETED"
-        string reason
     }
 
     MedicalRecord {
@@ -73,7 +62,6 @@ erDiagram
         string id PK
         string petId FK
         string medicalRecordId FK
-        string appointmentId FK
         datetime scheduledFor
         string status "PENDING | SENT | FAILED"
         string channel "IN_APP | EMAIL"
@@ -100,13 +88,6 @@ enum PetSpecies {
 enum PetGender {
   MALE
   FEMALE
-}
-
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
 }
 
 enum RecordType {
@@ -169,7 +150,6 @@ model Pet {
   microchipId   String?
 
   medicalRecords MedicalRecord[]
-  appointments   Appointment[]
   reminders      Reminder[]
 
   @@index([ownerId])
@@ -191,32 +171,9 @@ model Business {
   phone         String
   workingHours  Json            // Structured weekly operating hours
 
-  appointments  Appointment[]
   medicalRecords MedicalRecord[]
 
   @@index([latitude, longitude])
-}
-
-model Appointment {
-  id            String            @id @default(uuid())
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  pet           Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
-  petId         String
-
-  business      Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  businessId    String
-
-  dateTime      DateTime
-  status        AppointmentStatus @default(CONFIRMED)
-  reason        String?
-
-  reminders     Reminder[]
-
-  @@unique([businessId, dateTime]) // Ensures zero double-booking at DB level
-  @@index([businessId, status])
-  @@index([petId])
 }
 
 model MedicalRecord {
@@ -234,11 +191,12 @@ model MedicalRecord {
   title            String
   description      String?
   dateAdministered DateTime        @default(now())
-  nextDueDate      DateTime?
+  nextDueDate      DateTime?       // Set by VET_BUSINESS for next follow-up/control
 
   reminders        Reminder[]
 
   @@index([petId])
+  @@index([businessId])
   @@index([nextDueDate])
 }
 
@@ -253,9 +211,6 @@ model Reminder {
   medicalRecord   MedicalRecord?  @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
   medicalRecordId String?
 
-  appointment     Appointment?    @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  appointmentId   String?
-
   scheduledFor    DateTime
   status          ReminderStatus  @default(PENDING)
   sentAt          DateTime?
@@ -269,6 +224,7 @@ model Reminder {
 
 ## 3. Data Integrity & Validation Rules
 
-1. **Anti-Collision Constraint**: `@@unique([businessId, dateTime])` on `Appointment` prevents duplicate bookings at the database engine level.
-2. **Medical History Portability**: `MedicalRecord` links to `Pet` (owned by `User`). Deleting or transferring clinic association does not delete the owner's medical history.
-3. **Location Indices**: Spatial index `@@index([latitude, longitude])` optimizes distance calculation queries for nearby veterinary search.
+1. **Clinical Follow-Up Link**: When a veterinary business registers a completed attention (`MedicalRecord`), they can set `nextDueDate`. The automated cron job inspects `nextDueDate` to schedule `Reminder` entries.
+2. **Medical History Portability**: `MedicalRecord` links to `Pet` (owned by `User`). Changing or transferring clinic association preserves the owner's full medical history.
+3. **Read-Only Access for Pet Owners**: Pet owners can query all `MedicalRecord` entries associated with their pets (`pet.ownerId === context.user.id`), but only `VET_BUSINESS` users can create or modify `MedicalRecord` entries.
+4. **Spatial Index**: Index `@@index([latitude, longitude])` on `Business` optimizes distance calculations for nearby clinic discovery.

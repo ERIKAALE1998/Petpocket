@@ -1,8 +1,8 @@
 # Quickstart Validation Guide: PetPocket — MVP
 
 **Feature Branch**: `001-petpocket-mvp`  
-**Date**: 2026-08-01  
-**Spec**: [spec.md](file:///c:/Users/TonyJ0711/Desktop/Documentos/petpocket/specs/001-petpocket-mvp/spec.md)
+**Date**: 2026-08-01 (Corrected Scope)  
+**Spec**: [spec.md](file:///c:/Users/erika/Desktop/Petpocket/specs/001-petpocket-mvp/spec.md)
 
 ---
 
@@ -38,18 +38,20 @@
   3. Allow geolocation access or enter coordinates (e.g. Lat: `-0.1807`, Lng: `-78.4678`).
   4. **Expected Result**: Nearby clinics (Helpet, Pelusa) appear ordered by distance within 2 seconds.
 
-### Scenario 2: Anti-Collision Appointment Booking (User Story 1)
-- **Goal**: Verify that two users booking the same slot results in exactly 1 confirmed booking and 1 rejected attempt.
+### Scenario 2: Clinical Attention Registration & Follow-Up Scheduling (User Story 1)
+- **Goal**: Verify that a veterinary business can register completed care and define the next control date, while the pet owner views it in read-only mode.
 - **Steps**:
-  1. Login as Owner A and select clinic "Helpet" for 2026-08-10 at 10:00 AM.
-  2. Simultaneously submit booking for Owner B for 2026-08-10 at 10:00 AM.
-  3. **Expected Result**: Owner A receives a confirmed appointment response; Owner B receives a clear collision notification and the slot is removed from availability.
+  1. Login as `VET_BUSINESS` user (e.g. Clinic "Helpet").
+  2. Select pet "Firulais" and submit clinical record entry (Type: `VACCINE`, Title: `Rabies Vaccine`, Next Control Date: `2026-09-01`).
+  3. Log out and login as `PET_OWNER` user (owner of "Firulais").
+  4. Navigate to pet profile `/pets/:petId`.
+  5. **Expected Result**: The attention and next control date (`2026-09-01`) are visible in read-only mode. No edit, delete, or self-booking controls are available to the pet owner.
 
 ### Scenario 3: Automated Vaccine Reminders (User Story 2)
 - **Goal**: Verify that upcoming vaccine due dates trigger automatic reminders.
 - **Steps**:
-  1. Add a `MedicalRecord` entry for pet "Firulais" with `nextDueDate` set to 7 days from today.
-  2. Execute background job check via Wasp task or test runner.
+  1. Ensure a `MedicalRecord` entry exists for pet "Firulais" with `nextDueDate` set to 7 days from today.
+  2. Execute background job check via Wasp task or test runner (`checkVaccineRemindersJob`).
   3. **Expected Result**: A new `Reminder` record with status `PENDING` is generated and dispatched via email/in-app notification.
 
 ### Scenario 4: Digital Medical Record Access & Portability (User Story 3)
