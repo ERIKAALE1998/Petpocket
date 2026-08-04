@@ -2,12 +2,27 @@ import React, { useState } from "react";
 import { useQuery, getPetMedicalHistory } from "wasp/client/operations";
 import { AddRecordModal } from "./AddRecordModal.js";
 
-interface PetHistoryPageProps {
+interface MedicalPassportPageProps {
   petId: string;
   userRole?: string;
 }
 
-export const PetHistoryPage: React.FC<PetHistoryPageProps> = ({ petId, userRole = "PET_OWNER" }) => {
+interface BusinessInfo {
+  id: string;
+  name: string;
+}
+
+interface MedicalRecordItem {
+  id: string;
+  recordType: string;
+  title: string;
+  description?: string | null;
+  dateAdministered: string | Date;
+  nextDueDate?: string | Date | null;
+  business?: BusinessInfo | null;
+}
+
+export const MedicalPassportPage: React.FC<MedicalPassportPageProps> = ({ petId, userRole = "PET_OWNER" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: history, isLoading, error, refetch } = useQuery(getPetMedicalHistory, { petId });
 
@@ -78,7 +93,7 @@ export const PetHistoryPage: React.FC<PetHistoryPageProps> = ({ petId, userRole 
           </div>
         ) : (
           <div className="relative border-l-2 border-slate-800 ml-4 space-y-6 pl-6 pt-2">
-            {history.records.map((record: any) => {
+            {history.records.map((record: MedicalRecordItem) => {
               const isVaccine = record.recordType === "VACCINE";
               const isDeworming = record.recordType === "DEWORMING";
 

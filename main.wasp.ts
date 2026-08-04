@@ -20,7 +20,7 @@ import { petsSpec } from "./src/pets/pets.wasp";
 import { medicalRecordsSpec } from "./src/medical-records/medical-records.wasp";
 import { businessesSpec } from "./src/businesses/businesses.wasp";
 import { remindersSpec } from "./src/reminders/reminders.wasp";
-import { PetHistoryPage } from "./src/medical-records/views/PetHistoryPage" with { type: "ref" };
+import { MedicalPassportPage } from "./src/medical-records/views/MedicalPassportPage" with { type: "ref" };
 import { ReminderListPage } from "./src/reminders/views/ReminderListPage" with { type: "ref" };
 
 export default app({
@@ -45,7 +45,7 @@ export default app({
   spec: [
     route("LandingPageRoute", "/", page(LandingPage), { prerender: true }),
     route("NotFoundRoute", "*", page(NotFoundPage)),
-    route("PetHistoryRoute", "/pets/:petId/medical-history", page(PetHistoryPage, { authRequired: true })),
+    route("PetHistoryRoute", "/pets/:petId/medical-history", page(MedicalPassportPage, { authRequired: true })),
     route("RemindersRoute", "/reminders", page(ReminderListPage, { authRequired: true })),
     authSpec,
     userSpec,

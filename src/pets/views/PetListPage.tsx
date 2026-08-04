@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { useQuery, getPets, createPet } from "wasp/client/operations";
-import { Link } from "wasp/client/router";
+import { Link, routes } from "wasp/client/router";
+
+interface PetItem {
+  id: string;
+  name: string;
+  species: "DOG" | "CAT" | "OTHER" | string;
+  breed?: string | null;
+  gender: "MALE" | "FEMALE" | string;
+}
 
 export const PetListPage: React.FC = () => {
-  const { data: pets, isLoading, error, refetch } = useQuery(getPets);
+  const { data: pets, isLoading, refetch } = useQuery(getPets);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [species, setSpecies] = useState<"DOG" | "CAT" | "OTHER">("DOG");
@@ -30,7 +38,7 @@ export const PetListPage: React.FC = () => {
       setName("");
       setBreed("");
       refetch();
-    } catch (err) {
+    } catch {
       setIsSubmitting(false);
     }
   };
@@ -72,7 +80,7 @@ export const PetListPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pets?.map((pet: any) => (
+          {pets?.map((pet: PetItem) => (
             <div
               key={pet.id}
               className="rounded-3xl bg-slate-900/80 border border-slate-800 p-6 shadow-xl hover:border-slate-700 transition-all flex flex-col justify-between space-y-4"
@@ -89,7 +97,7 @@ export const PetListPage: React.FC = () => {
 
               <div className="pt-3 border-t border-slate-800">
                 <Link
-                  to="/pets/:petId/medical-history"
+                  to={routes.PetHistoryRoute.to}
                   params={{ petId: pet.id }}
                   className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-slate-700"
                 >
@@ -123,7 +131,7 @@ export const PetListPage: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Especie</label>
                 <select
                   value={species}
-                  onChange={(e: any) => setSpecies(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSpecies(e.target.value as "DOG" | "CAT" | "OTHER")}
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-slate-100"
                 >
                   <option value="DOG">Perro</option>
@@ -147,7 +155,7 @@ export const PetListPage: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Género</label>
                 <select
                   value={gender}
-                  onChange={(e: any) => setGender(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setGender(e.target.value as "MALE" | "FEMALE")}
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-slate-100"
                 >
                   <option value="MALE">Macho</option>
