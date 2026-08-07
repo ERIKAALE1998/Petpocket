@@ -32,8 +32,9 @@ export async function checkVaccineRemindersJob(_args: any, context: any) {
         data: {
           petId: record.petId,
           medicalRecordId: record.id,
-          scheduledFor: record.nextDueDate,
+          dueDate: record.nextDueDate,
           status: "PENDING",
+          userId: record.pet.ownerId,
         },
       });
       createdCount++;

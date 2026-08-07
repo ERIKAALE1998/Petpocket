@@ -12,7 +12,7 @@ describe("Reminders Cron Job", () => {
       petId: "pet-1",
       nextDueDate: dueDate,
       reminders: [],
-      pet: { owner: { email: "owner@example.com" } },
+      pet: { ownerId: "owner-1", owner: { email: "owner@example.com" } },
     };
 
     const mockCreate = vi.fn().mockResolvedValue({ id: "rem-1", status: "PENDING" });
@@ -35,8 +35,9 @@ describe("Reminders Cron Job", () => {
       data: {
         petId: "pet-1",
         medicalRecordId: "record-101",
-        scheduledFor: dueDate,
+        dueDate: dueDate,
         status: "PENDING",
+        userId: "owner-1",
       },
     });
   });
@@ -49,7 +50,7 @@ describe("Reminders Cron Job", () => {
       petId: "pet-1",
       nextDueDate: dueDate,
       reminders: [{ id: "rem-existing", status: "PENDING" }],
-      pet: { owner: { email: "owner@example.com" } },
+      pet: { ownerId: "owner-1", owner: { email: "owner@example.com" } },
     };
 
     const mockCreate = vi.fn();
