@@ -30,6 +30,8 @@ export const ClinicSearchPage: React.FC = () => {
   // Default coordinates: Quito, Ecuador
   const [lat, setLat] = useState<number>(-0.1807);
   const [lng, setLng] = useState<number>(-78.4678);
+  const [latInput, setLatInput] = useState<string>("-0.1807");
+  const [lngInput, setLngInput] = useState<string>("-78.4678");
   const [radiusKm, setRadiusKm] = useState<number>(10);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -69,8 +71,12 @@ export const ClinicSearchPage: React.FC = () => {
       setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLat(parseFloat(position.coords.latitude.toFixed(6)));
-          setLng(parseFloat(position.coords.longitude.toFixed(6)));
+          const newLat = parseFloat(position.coords.latitude.toFixed(6));
+          const newLng = parseFloat(position.coords.longitude.toFixed(6));
+          setLat(newLat);
+          setLng(newLng);
+          setLatInput(newLat.toString());
+          setLngInput(newLng.toString());
           setIsLocating(false);
           refetch();
         },
@@ -128,10 +134,13 @@ export const ClinicSearchPage: React.FC = () => {
                   <MapPin className="w-3 h-3 text-emerald-400" /> Latitud:
                 </label>
                 <input
-                  type="number"
-                  step="any"
-                  value={lat}
-                  onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
+                  type="text"
+                  value={latInput}
+                  onChange={(e) => {
+                    setLatInput(e.target.value);
+                    const parsed = parseFloat(e.target.value);
+                    if (!isNaN(parsed)) setLat(parsed);
+                  }}
                   className="w-32 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-slate-100 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
@@ -141,10 +150,13 @@ export const ClinicSearchPage: React.FC = () => {
                   <MapPin className="w-3 h-3 text-emerald-400" /> Longitud:
                 </label>
                 <input
-                  type="number"
-                  step="any"
-                  value={lng}
-                  onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
+                  type="text"
+                  value={lngInput}
+                  onChange={(e) => {
+                    setLngInput(e.target.value);
+                    const parsed = parseFloat(e.target.value);
+                    if (!isNaN(parsed)) setLng(parsed);
+                  }}
                   className="w-32 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-slate-100 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
@@ -186,6 +198,8 @@ export const ClinicSearchPage: React.FC = () => {
                 onClick={() => {
                   setLat(preset.lat);
                   setLng(preset.lng);
+                  setLatInput(preset.lat.toString());
+                  setLngInput(preset.lng.toString());
                 }}
                 className={`px-3 py-1 rounded-lg text-xs transition-all border ${
                   lat === preset.lat && lng === preset.lng
@@ -463,7 +477,7 @@ export const ClinicSearchPage: React.FC = () => {
       )}
 
       {/* Selected Clinic Modal Detail */}
-      {selectedClinic && viewMode !== "dual" && (
+      {selectedClinic && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-700/80 p-6 shadow-2xl space-y-6 text-slate-100">
             <button
