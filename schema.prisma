@@ -33,7 +33,20 @@ enum RecordType {
 
 enum ReminderStatus {
   PENDING
+  COMPLETED
+  CANCELLED
   SENT
+  FAILED
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+  PUSH
+}
+
+enum NotificationStatus {
+  SUCCESS
   FAILED
 }
 
@@ -51,6 +64,8 @@ model User {
   // PetPocket Relations
   pets                      Pet[]
   business                  Business?
+  reminders                 Reminder[]
+  notificationLogs          NotificationLog[]
 
   paymentProcessorUserId    String?         @unique
   lemonSqueezyCustomerPortalUrl String?     // You can delete this if you're not using Lemon Squeezy as your payments processor.
@@ -136,18 +151,45 @@ model Reminder {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
+  title           String          @default("Recordatorio Médico")
+  description     String?
+  dueDate         DateTime        @default(now())
+  recurring       Boolean         @default(false)
+  intervalDays    Int?
+  status          ReminderStatus  @default(PENDING)
+  sentAt          DateTime?
+
   pet             Pet             @relation(fields: [petId], references: [id], onDelete: Cascade)
   petId           String
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
 
   medicalRecord   MedicalRecord?  @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
   medicalRecordId String?
 
-  scheduledFor    DateTime
-  status          ReminderStatus  @default(PENDING)
-  sentAt          DateTime?
+  notificationLogs NotificationLog[]
 
-  @@index([scheduledFor, status])
+  @@index([dueDate, status])
   @@index([petId])
+  @@index([userId])
+}
+
+model NotificationLog {
+  id              String              @id @default(uuid())
+  reminder        Reminder?           @relation(fields: [reminderId], references: [id], onDelete: SetNull)
+  reminderId      String?
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  channel         NotificationChannel
+  sentAt          DateTime            @default(now())
+  status          NotificationStatus
+  errorMessage    String?
+
+  @@index([userId])
+  @@index([reminderId])
 }
 
 model GptResponse {

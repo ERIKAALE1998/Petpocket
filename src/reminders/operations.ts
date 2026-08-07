@@ -1,6 +1,109 @@
 import { HttpError } from "wasp/server";
-import { type GetUserReminders, type GetBusinessUpcomingReminders, type TriggerManualReminder } from "wasp/server/operations";
+import {
+  type GetUserReminders,
+  type GetBusinessUpcomingReminders,
+  type TriggerManualReminder,
+  type GetReminders,
+  type CreateReminder,
+  type ToggleReminderStatus,
+} from "wasp/server/operations";
 import { ensureUserRole } from "../shared/rbac.js";
+
+type GetRemindersInput = void;
+
+export const getReminders: GetReminders<GetRemindersInput, any> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401, "No autenticado");
+  }
+
+  const reminders = await context.entities.Reminder.findMany({
+    where: {
+      userId: context.user.id,
+    },
+    include: {
+      pet: true,
+      medicalRecord: true,
+    },
+    orderBy: { dueDate: "asc" },
+  });
+
+  return reminders;
+};
+
+type CreateReminderInput = {
+  petId: string;
+  title: string;
+  description?: string;
+  dueDate: string;
+  recurring?: boolean;
+  intervalDays?: number;
+};
+
+export const createReminder: CreateReminder<CreateReminderInput, any> = async (args, context) => {
+  if (!context.user) {
+    throw new HttpError(401, "No autenticado");
+  }
+
+  if (!args.petId || !args.title || !args.dueDate) {
+    throw new HttpError(400, "Los campos petId, title y dueDate son requeridos.");
+  }
+
+  const pet = await context.entities.Pet.findUnique({
+    where: { id: args.petId },
+  });
+
+  if (!pet) {
+    throw new HttpError(404, "Mascota no encontrada");
+  }
+
+  const reminder = await context.entities.Reminder.create({
+    data: {
+      title: args.title.trim(),
+      description: args.description?.trim() || null,
+      dueDate: new Date(args.dueDate),
+      recurring: args.recurring ?? false,
+      intervalDays: args.intervalDays || null,
+      status: "PENDING",
+      petId: args.petId,
+      userId: context.user.id,
+    },
+    include: {
+      pet: true,
+    },
+  });
+
+  return reminder;
+};
+
+type ToggleReminderStatusInput = {
+  reminderId: string;
+  status?: "PENDING" | "COMPLETED" | "CANCELLED";
+};
+
+export const toggleReminderStatus: ToggleReminderStatus<ToggleReminderStatusInput, any> = async (args, context) => {
+  if (!context.user) {
+    throw new HttpError(401, "No autenticado");
+  }
+
+  const reminder = await context.entities.Reminder.findUnique({
+    where: { id: args.reminderId },
+  });
+
+  if (!reminder) {
+    throw new HttpError(404, "Recordatorio no encontrado");
+  }
+
+  const newStatus = args.status || (reminder.status === "COMPLETED" ? "PENDING" : "COMPLETED");
+
+  const updatedReminder = await context.entities.Reminder.update({
+    where: { id: args.reminderId },
+    data: {
+      status: newStatus,
+    },
+  });
+
+  return updatedReminder;
+};
 
 export const getUserReminders: GetUserReminders<any, any> = async (_args, context) => {
   if (!context.user) {
@@ -42,7 +145,7 @@ export const getUserReminders: GetUserReminders<any, any> = async (_args, contex
         },
       },
     },
-    orderBy: { scheduledFor: "asc" },
+    orderBy: { dueDate: "asc" },
   });
 
   return reminders;
@@ -108,9 +211,11 @@ export const triggerManualReminder: TriggerManualReminder<TriggerManualReminderI
 
   const reminder = await context.entities.Reminder.create({
     data: {
+      title: record.title,
+      dueDate: record.nextDueDate || new Date(),
       petId: record.petId,
+      userId: context.user!.id,
       medicalRecordId: record.id,
-      scheduledFor: record.nextDueDate || new Date(),
       status: "SENT",
       sentAt: new Date(),
     },
