@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useParams } from "react-router";
 import { useQuery, getPetMedicalHistory } from "wasp/client/operations";
+import { useAuth } from "wasp/client/auth";
 import { AddRecordModal } from "./AddRecordModal.js";
 
 interface MedicalPassportPageProps {
-  petId: string;
+  petId?: string;
   userRole?: string;
 }
 
@@ -22,11 +24,20 @@ interface MedicalRecordItem {
   business?: BusinessInfo | null;
 }
 
-export const MedicalPassportPage: React.FC<MedicalPassportPageProps> = ({ petId, userRole = "PET_OWNER" }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: history, isLoading, error, refetch } = useQuery(getPetMedicalHistory, { petId });
+export const MedicalPassportPage: React.FC<MedicalPassportPageProps> = ({ petId: propPetId, userRole: propUserRole }) => {
+  const { petId: urlPetId } = useParams<{ petId: string }>();
+  const petId = propPetId || urlPetId || "";
 
-  const isVet = userRole === "VET_BUSINESS" || userRole === "ADMIN";
+  const { data: user } = useAuth();
+  const effectiveUserRole = propUserRole || user?.role || "PET_OWNER";
+  const isVet = effectiveUserRole === "VET_BUSINESS" || effectiveUserRole === "ADMIN" || !!user?.isAdmin;
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: history, isLoading, error, refetch } = useQuery(
+    getPetMedicalHistory,
+    { petId },
+    { enabled: !!petId }
+  );
 
   if (isLoading) {
     return (
