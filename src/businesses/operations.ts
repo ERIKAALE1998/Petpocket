@@ -18,7 +18,7 @@ export const searchNearbyBusinesses: SearchNearbyBusinesses<SearchNearbyInput, a
   const userLng = args.longitude;
 
   // PostgreSQL Haversine distance formula calculation via Prisma raw SQL
-  const result: any[] = await context.entities.Business.prismaApp.$queryRaw`
+  const result: any[] = await (context.entities.Business as any).prismaApp.$queryRaw`
     SELECT 
       id, 
       name, 

@@ -8,11 +8,8 @@ import {
 } from "./operations" with { type: "ref" };
 
 export const remindersSpec: Spec = [
-  job("checkVaccineRemindersJob", {
+  job(checkVaccineRemindersJob, {
     executor: "PgBoss",
-    perform: {
-      fn: checkVaccineRemindersJob,
-    },
     schedule: {
       cron: "0 8 * * *", // Run daily at 08:00 UTC
     },
