@@ -1,0 +1,11 @@
+node_modules/
+.wasp/
+dist/
+build/
+*.log
+.env
+.env.local
+.env.server
+.env.client
+.DS_Store
+Thumbs.db

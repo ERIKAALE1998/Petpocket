@@ -1,0 +1,233 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  PET_OWNER
+  VET_BUSINESS
+  ADMIN
+}
+
+enum PetSpecies {
+  DOG
+  CAT
+  OTHER
+}
+
+enum PetGender {
+  MALE
+  FEMALE
+}
+
+enum RecordType {
+  VACCINE
+  DEWORMING
+  CONSULTATION
+  SURGERY
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model User {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  email                     String?         @unique
+  username                  String?         @unique
+  fullName                  String?
+  phone                     String?
+  role                      Role            @default(PET_OWNER)
+  isAdmin                   Boolean         @default(false)
+
+  // PetPocket Relations
+  pets                      Pet[]
+  business                  Business?
+
+  paymentProcessorUserId    String?         @unique
+  lemonSqueezyCustomerPortalUrl String?     // You can delete this if you're not using Lemon Squeezy as your payments processor.
+  subscriptionStatus        String?         // 'active', 'cancel_at_period_end', 'past_due', 'deleted'
+  subscriptionPlan          String?         // 'hobby', 'pro'
+  datePaid                  DateTime?
+  credits                   Int             @default(3)
+
+  gptResponses              GptResponse[]
+  contactFormMessages       ContactFormMessage[]
+  tasks                     Task[]
+  files                     File[]
+}
+
+model Pet {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  owner         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId       String
+
+  name          String
+  species       PetSpecies      @default(DOG)
+  breed         String?
+  birthDate     DateTime?
+  gender        PetGender       @default(MALE)
+  microchipId   String?
+
+  medicalRecords MedicalRecord[]
+  reminders      Reminder[]
+
+  @@index([ownerId])
+}
+
+model Business {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  owner         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String          @unique
+
+  name          String
+  description   String?
+  address       String
+  latitude      Float
+  longitude     Float
+  phone         String
+  workingHours  Json?           // Structured weekly operating hours
+
+  medicalRecords MedicalRecord[]
+
+  @@index([latitude, longitude])
+}
+
+model MedicalRecord {
+  id               String          @id @default(uuid())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  pet              Pet             @relation(fields: [petId], references: [id], onDelete: Cascade)
+  petId            String
+
+  business         Business?       @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  businessId       String?
+
+  recordType       RecordType      @default(VACCINE)
+  title            String
+  description      String?
+  dateAdministered DateTime        @default(now())
+  nextDueDate      DateTime?       // Set by VET_BUSINESS for next follow-up/control
+
+  reminders        Reminder[]
+
+  @@index([petId])
+  @@index([businessId])
+  @@index([nextDueDate])
+}
+
+model Reminder {
+  id              String          @id @default(uuid())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  pet             Pet             @relation(fields: [petId], references: [id], onDelete: Cascade)
+  petId           String
+
+  medicalRecord   MedicalRecord?  @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+  medicalRecordId String?
+
+  scheduledFor    DateTime
+  status          ReminderStatus  @default(PENDING)
+  sentAt          DateTime?
+
+  @@index([scheduledFor, status])
+  @@index([petId])
+}
+
+model GptResponse {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  content                   String
+}
+
+model Task {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  description               String
+  time                      String          @default("1")
+  isDone                    Boolean         @default(false)
+}
+
+model File {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  name                      String
+  type                      String
+  s3Key                     String
+}
+
+model DailyStats {
+  id                               Int             @id @default(autoincrement())
+  date                             DateTime        @default(now()) @unique
+
+  totalViews                       Int             @default(0)
+  prevDayViewsChangePercent        String          @default("0")
+  userCount                        Int             @default(0)
+  paidUserCount                    Int             @default(0)
+  userDelta                        Int             @default(0)
+  paidUserDelta                    Int             @default(0)
+  totalRevenue                     Float           @default(0)
+  totalProfit                      Float           @default(0)
+
+  sources                          PageViewSource[]
+}
+
+model PageViewSource {
+  @@id([date, name])
+  name                     String
+  date                     DateTime        @default(now())
+
+  dailyStats               DailyStats?     @relation(fields: [dailyStatsId], references: [id])
+  dailyStatsId             Int?
+
+  visitors                 Int
+}
+
+model Logs {
+  id                       Int             @id @default(autoincrement())
+  createdAt                DateTime        @default(now())
+
+  message                  String
+  level                    String
+}
+
+model ContactFormMessage {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  content                   String
+  isRead                    Boolean         @default(false)
+  repliedAt                 DateTime?
+}
