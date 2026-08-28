@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+
 export class HttpError extends Error {
   constructor(statusCode, message, data) {
     super(message);
@@ -8,5 +10,7 @@ export class HttpError extends Error {
 }
 
 export const env = {};
-export const prisma = {};
+export const prisma = {
+  $queryRaw: vi.fn().mockResolvedValue([]),
+};
 export const config = {};
